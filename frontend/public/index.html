@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encrypt/Decrypt Image</title>
+</head>
+<body>
+    <h1>Encrypt/Decrypt BMP Image</h1>
+    <form id="uploadForm">
+        <label for="key">AES Key:</label>
+        <input type="text" id="key" name="key" required>
+        <label for="image">BMP Image:</label>
+        <input type="file" id="image" name="image" accept=".bmp" required>
+        <br>
+        <label for="operation">Operation:</label>
+        <select id="operation" name="operation" required>
+            <option value="encrypt">Encrypt</option>
+            <option value="decrypt">Decrypt</option>
+        </select>
+        <br>
+        <label for="mode">Mode:</label>
+        <select id="mode" name="mode" required>
+            <option value="ECB">ECB</option>
+            <option value="CBC">CBC</option>
+        </select>
+        <br>
+        <button type="button" onclick="processImage()">Submit</button>
+    </form>
+    <script>
+        async function processImage() {
+            try {
+                const form = document.getElementById('uploadForm');
+                const formData = new FormData(form);
+                const response = await fetch('http://localhost:8080/encrypt', {
+                    method: 'POST',
+                    body: formData
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const blob = await response.blob();
+                const operation = formData.get('operation');
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = operation === 'encrypt' ? 'encrypted_image.bmp' : 'decrypted_image.bmp';
+                document.body.appendChild(a); // Append the anchor to the body
+                a.click();
+                document.body.removeChild(a); // Remove the anchor from the body
+                window.URL.revokeObjectURL(url); // Clean up the URL object
+            } catch (error) {
+                console.error('Error during the fetch operation:', error);
+                alert('An error occurred while processing the image.');
+            }
+        }
+    </script>
+</body>
+</html>
